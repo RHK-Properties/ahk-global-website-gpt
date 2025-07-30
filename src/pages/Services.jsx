@@ -1,0 +1,1 @@
+import React from 'react'; export default function Services() { return <div className='p-12 text-center'><h2 className='text-3xl font-bold'>Services</h2><p className='mt-4'>Details about services offered.</p></div> }

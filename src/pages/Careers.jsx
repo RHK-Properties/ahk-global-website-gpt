@@ -1,0 +1,1 @@
+import React from 'react'; export default function Careers() { return <div className='p-12 text-center'><h2 className='text-3xl font-bold'>Careers</h2><p className='mt-4'>Join our team and grow with us.</p></div> }

@@ -1,0 +1,1 @@
+import React from 'react'; export default function About() { return <div className='p-12 text-center'><h2 className='text-3xl font-bold'>About Us</h2><p className='mt-4'>Information about AHK Global Solutions.</p></div> }

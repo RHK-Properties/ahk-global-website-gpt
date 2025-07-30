@@ -1,0 +1,1 @@
+import React from 'react'; export default function Technology() { return <div className='p-12 text-center'><h2 className='text-3xl font-bold'>Technology & Innovation</h2><p className='mt-4'>Cutting-edge technology insights.</p></div> }

@@ -51,15 +51,22 @@ jobs:
           elif [ -f yarn.lock ]; then echo "pm=yarn" >> "$GITHUB_OUTPUT"
           else echo "pm=npm" >> "$GITHUB_OUTPUT"; fi
 
-      - uses: pnpm/action-setup@v4
-        if: steps.pm.outputs.pm == 'pnpm'
-        with:
-          version: 9
-
       - uses: actions/setup-node@v4
         if: steps.pm.outputs.pm != 'none'
         with:
           node-version: 20
+
+      # corepack reads the "packageManager" field from package.json, so it picks
+      # the exact pnpm/yarn version each repo pins. Do not hardcode a version
+      # here - that clashes with packageManager and fails the run.
+      - name: Enable corepack
+        if: ${{ steps.pm.outputs.pm == 'pnpm' || steps.pm.outputs.pm == 'yarn' }}
+        run: |
+          corepack enable
+          if ! node -e "process.exit(require('./package.json').packageManager ? 0 : 1)"; then
+            echo "::warning::No packageManager field in package.json - defaulting to pnpm@9."
+            corepack prepare pnpm@9 --activate
+          fi
 
       - name: Install dependencies
         if: steps.pm.outputs.pm != 'none'
@@ -67,9 +74,15 @@ jobs:
           PM: ${{ steps.pm.outputs.pm }}
         run: |
           case "$PM" in
-            pnpm) pnpm install --frozen-lockfile || pnpm install ;;
-            yarn) yarn install --frozen-lockfile || yarn install ;;
-            npm)  npm ci || npm install ;;
+            pnpm) pnpm install --frozen-lockfile || {
+                    echo "::warning::pnpm-lock.yaml is out of date with package.json - installing unfrozen. Refresh the lockfile (RHKP-1222)."
+                    pnpm install --no-frozen-lockfile ; } ;;
+            yarn) yarn install --frozen-lockfile || {
+                    echo "::warning::yarn.lock is out of date - installing unfrozen."
+                    yarn install ; } ;;
+            npm)  npm ci || {
+                    echo "::warning::package-lock.json is out of date - falling back to npm install."
+                    npm install ; } ;;
           esac
 
       - name: Lint

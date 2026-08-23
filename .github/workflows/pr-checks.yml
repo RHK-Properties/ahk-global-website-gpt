@@ -85,6 +85,20 @@ jobs:
                     npm install ; } ;;
           esac
 
+      # Prisma's client is CODE-GENERATED from schema.prisma into node_modules;
+      # it is not in the lockfile and installing dependencies does not create it.
+      # Without it every `prisma.<model>` resolves to TypeScript's `error` type,
+      # which cascades into thousands of bogus no-unsafe-* warnings AND real
+      # false-positive errors (methods whose only `await` is a Prisma call get
+      # flagged by require-await). The Dockerfile already does this at build
+      # time; CI has to as well, or lint and typecheck are checking a fiction.
+      # Skipped automatically in repos with no Prisma schema.
+      - name: Generate Prisma client
+        if: ${{ !cancelled() && steps.pm.outputs.pm != 'none' && hashFiles('**/prisma/schema.prisma') != '' }}
+        run: |
+          echo "Prisma schema found - generating client so lint/typecheck see real model types."
+          npx --yes prisma generate
+
       - name: Lint
         if: ${{ !cancelled() && steps.pm.outputs.pm != 'none' }}
         env:

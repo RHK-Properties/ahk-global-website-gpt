@@ -54,7 +54,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.pm.outputs.pm != 'none'
         with:
-          node-version: 20
+          node-version: 22
 
       # corepack reads the "packageManager" field from package.json, so it picks
       # the exact pnpm/yarn version each repo pins. Do not hardcode a version
